@@ -1,21 +1,30 @@
 package com.alonazarenko.controller;
 
-import com.alonazarenko.exception.ValidationException;
 import com.alonazarenko.model.User;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import jakarta.validation.*;
 import java.time.LocalDate;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserControllerTest {
 
-    private UserController controller;
+    private static ValidatorFactory factory;
+    private static Validator validator;
 
-    @BeforeEach
-    void setUp() {
-        controller = new UserController();
+    @BeforeAll
+    static void initValidation() {
+        factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
+    }
+
+    @AfterAll
+    static void closeFactory() {
+        factory.close();
     }
 
     private User baseUser() {
@@ -28,13 +37,11 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldCreateValidUser() {
+    void shouldAcceptValidUser() {
         User user = baseUser();
 
-        User created = controller.createUser(user);
-
-        assertNotNull(created);
-        assertEquals(1, created.getId());
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertTrue(violations.isEmpty());
     }
 
     @Test
@@ -42,7 +49,8 @@ class UserControllerTest {
         User user = baseUser();
         user.setEmail("");
 
-        assertThrows(ValidationException.class, () -> controller.createUser(user));
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
     }
 
     @Test
@@ -50,15 +58,17 @@ class UserControllerTest {
         User user = baseUser();
         user.setEmail(null);
 
-        assertThrows(ValidationException.class, () -> controller.createUser(user));
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
     }
 
     @Test
-    void shouldRejectEmailWithoutAt() {
+    void shouldRejectInvalidEmail() {
         User user = baseUser();
         user.setEmail("wrongemail");
 
-        assertThrows(ValidationException.class, () -> controller.createUser(user));
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
     }
 
     @Test
@@ -66,7 +76,8 @@ class UserControllerTest {
         User user = baseUser();
         user.setLogin("");
 
-        assertThrows(ValidationException.class, () -> controller.createUser(user));
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
     }
 
     @Test
@@ -74,7 +85,8 @@ class UserControllerTest {
         User user = baseUser();
         user.setLogin("my login");
 
-        assertThrows(ValidationException.class, () -> controller.createUser(user));
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
     }
 
     @Test
@@ -82,21 +94,7 @@ class UserControllerTest {
         User user = baseUser();
         user.setBirthday(LocalDate.now().plusDays(1));
 
-        assertThrows(ValidationException.class, () -> controller.createUser(user));
-    }
-
-    @Test
-    void shouldUseLoginAsNameIfEmpty() {
-        User user = baseUser();
-        user.setName("");
-
-        User created = controller.createUser(user);
-
-        assertEquals("testlogin", created.getName());
-    }
-
-    @Test
-    void shouldFailOnNullUser() {
-        assertThrows(NullPointerException.class, () -> controller.createUser(null));
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
     }
 }

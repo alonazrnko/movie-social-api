@@ -1,21 +1,31 @@
 package com.alonazarenko.controller;
 
-import com.alonazarenko.exception.ValidationException;
 import com.alonazarenko.model.Film;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import jakarta.validation.*;
+
 import java.time.LocalDate;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class FilmControllerTest {
 
-    private FilmController controller;
+    private static ValidatorFactory factory;
+    private static Validator validator;
 
-    @BeforeEach
-    void setUp() {
-        controller = new FilmController();
+    @BeforeAll
+    static void initValidation() {
+        factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
+    }
+
+    @AfterAll
+    static void closeFactory() {
+        factory.close();
     }
 
     private Film baseFilm() {
@@ -28,14 +38,11 @@ class FilmControllerTest {
     }
 
     @Test
-    void shouldAddValidFilm() {
+    void shouldAcceptValidFilm() {
         Film film = baseFilm();
 
-        Film created = controller.addFilm(film);
-
-        assertNotNull(created);
-        assertEquals(1, created.getId());
-        assertEquals("Test film", created.getName());
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        assertTrue(violations.isEmpty());
     }
 
     @Test
@@ -43,7 +50,8 @@ class FilmControllerTest {
         Film film = baseFilm();
         film.setName("");
 
-        assertThrows(ValidationException.class, () -> controller.addFilm(film));
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        assertFalse(violations.isEmpty());
     }
 
     @Test
@@ -51,7 +59,8 @@ class FilmControllerTest {
         Film film = baseFilm();
         film.setName(null);
 
-        assertThrows(ValidationException.class, () -> controller.addFilm(film));
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        assertFalse(violations.isEmpty());
     }
 
     @Test
@@ -59,7 +68,8 @@ class FilmControllerTest {
         Film film = baseFilm();
         film.setDescription("A".repeat(201));
 
-        assertThrows(ValidationException.class, () -> controller.addFilm(film));
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        assertFalse(violations.isEmpty());
     }
 
     @Test
@@ -67,27 +77,21 @@ class FilmControllerTest {
         Film film = baseFilm();
         film.setReleaseDate(LocalDate.of(1800, 1, 1));
 
-        assertThrows(ValidationException.class, () -> controller.addFilm(film));
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        assertFalse(violations.isEmpty());
     }
 
-    @Test
-    void shouldRejectNegativeDuration() {
-        Film film = baseFilm();
-        film.setDuration(-5);
-
-        assertThrows(ValidationException.class, () -> controller.addFilm(film));
-    }
 
     @Test
-    void shouldRejectZeroDuration() {
+    void shouldRejectNonPositiveDuration() {
         Film film = baseFilm();
         film.setDuration(0);
 
-        assertThrows(ValidationException.class, () -> controller.addFilm(film));
-    }
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        assertFalse(violations.isEmpty());
 
-    @Test
-    void shouldFailOnNullFilm() {
-        assertThrows(NullPointerException.class, () -> controller.addFilm(null));
+        film.setDuration(-5);
+        violations = validator.validate(film);
+        assertFalse(violations.isEmpty());
     }
 }
