@@ -42,5 +42,7 @@ build/
 ### VS Code ###
 .vscode/
 
+lombok.config
+
 *.db
 db/*
