@@ -2,13 +2,13 @@ package com.alonazarenko.service;
 
 import com.alonazarenko.exception.NotFoundException;
 import com.alonazarenko.model.Friendship;
-import com.alonazarenko.model.FriendshipStatus;
 import com.alonazarenko.model.User;
 import com.alonazarenko.storage.friend.FriendshipStorage;
 import com.alonazarenko.storage.user.UserStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.Collection;
 import java.util.Set;
@@ -19,11 +19,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
 
+    @Qualifier("userDbStorage")
     private final UserStorage userStorage;
     private final FriendshipStorage friendshipStorage;
 
     public User create(User user) {
-        log.debug("Creating user login={}", user.getLogin());
+        log.info("Create user login={}", user.getLogin());
         return userStorage.create(user);
     }
 
@@ -56,40 +57,26 @@ public class UserService {
     }
 
     public void addFriend(long userId, long friendId) {
-        log.info("Sending friend request: {} -> {}", userId, friendId);
+        log.info("Adding friend: {} -> {}", userId, friendId);
 
         userStorage.getById(userId)
-                .orElseThrow(() -> {
-                    log.warn("User not found: id={}", userId);
-                    return new NotFoundException("User with id " + userId + " not found");
-                });
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
         userStorage.getById(friendId)
-                .orElseThrow(() -> {
-                    log.warn("Friend not found: id={}", friendId);
-                    return new NotFoundException("User with id " + friendId + " not found");
-                });
+                .orElseThrow(() -> new NotFoundException("User not found: " + friendId));
 
-        friendshipStorage.find(friendId, userId)
-                .ifPresentOrElse(
-                        existing -> {
-                            existing.setStatus(FriendshipStatus.CONFIRMED);
-                            friendshipStorage.update(existing);
-
-                            friendshipStorage.save(
-                                    new Friendship(userId, friendId, FriendshipStatus.CONFIRMED)
-                            );
-
-                            log.info("Friendship confirmed between {} and {}", userId, friendId);
-                        },
-                        () -> friendshipStorage.save(
-                                new Friendship(userId, friendId, FriendshipStatus.PENDING)
-                        )
-                );
+        friendshipStorage.save(new Friendship(userId, friendId));
     }
 
     public void removeFriend(long userId, long friendId) {
-        log.info("Removing friendship between {} and {}", userId, friendId);
+        log.info("Remove friend {} -> {}", userId, friendId);
+
+        userStorage.getById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
+
+        userStorage.getById(friendId)
+                .orElseThrow(() -> new NotFoundException("User not found: " + friendId));
+
         friendshipStorage.delete(userId, friendId);
     }
 
@@ -98,28 +85,18 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
         return friendshipStorage.findAllByUserId(userId).stream()
-                .filter(f -> f.getStatus() == FriendshipStatus.CONFIRMED)
-                .map(f -> f.getUserId() == userId ? f.getFriendId() : f.getUserId())
+                .map(Friendship::getFriendId)
                 .map(id -> userStorage.getById(id).orElseThrow())
                 .toList();
     }
 
     public Collection<User> getCommonFriends(long userId, long otherId) {
-        log.info("Getting common friends between {} and {}", userId, otherId);
-
-        userStorage.getById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
-        userStorage.getById(otherId)
-                .orElseThrow(() -> new NotFoundException("User not found: " + otherId));
-
         Set<Long> userFriends = friendshipStorage.findAllByUserId(userId).stream()
-                .filter(f -> f.getStatus() == FriendshipStatus.CONFIRMED)
-                .map(f -> f.getUserId() == userId ? f.getFriendId() : f.getUserId())
+                .map(Friendship::getFriendId)
                 .collect(Collectors.toSet());
 
         Set<Long> otherFriends = friendshipStorage.findAllByUserId(otherId).stream()
-                .filter(f -> f.getStatus() == FriendshipStatus.CONFIRMED)
-                .map(f -> f.getUserId() == otherId ? f.getFriendId() : f.getUserId())
+                .map(Friendship::getFriendId)
                 .collect(Collectors.toSet());
 
         userFriends.retainAll(otherFriends);
