@@ -1,9 +1,15 @@
 package com.alonazarenko.model;
 
-public enum MpaRating {
-    G,        // No age restrictions
-    PG,       // Parental guidance suggested
-    PG_13,    // Not recommended for children under 13
-    R,        // Under 17 requires accompanying adult
-    NC_17     // No one 17 and under admitted
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class MpaRating {
+    private long id;
+    private String name;
 }
