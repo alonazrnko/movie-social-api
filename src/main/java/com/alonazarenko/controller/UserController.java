@@ -1,54 +1,73 @@
 package com.alonazarenko.controller;
 
-import com.alonazarenko.exception.ValidationException;
 import com.alonazarenko.model.User;
+import com.alonazarenko.service.UserService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
 
-    private final List<User> users = new ArrayList<>();
-    private int nextId = 1;
+    private final UserService userService;
 
+    // CREATE
     @PostMapping
-    public User createUser(@Valid @RequestBody User user) {
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-
-        user.setId(nextId++);
-        users.add(user);
-        return user;
+    public User create(@Valid @RequestBody User user) {
+        log.info("POST /users — create user login={}", user.getLogin());
+        return userService.create(user);
     }
 
+    // UPDATE
     @PutMapping
-    public User updateUser(@Valid @RequestBody User user) {
-        for (int i = 0; i < users.size(); i++) {
-            if (users.get(i).getId() == user.getId()) {
-
-                if (user.getName() == null || user.getName().isBlank()) {
-                    user.setName(user.getLogin());
-                }
-
-                users.set(i, user);
-                log.info("User updated: {}", user);
-                return user;
-            }
-        }
-
-        log.warn("User update failed. User with id {} not found", user.getId());
-        throw new ValidationException("User with id " + user.getId() + " not found");
+    public User update(@Valid @RequestBody User user) {
+        log.info("PUT /users — update user id={}", user.getId());
+        return userService.update(user);
     }
 
+    // READ ALL
     @GetMapping
-    public List<User> getAllUsers() {
-        return users;
+    public Collection<User> getAll() {
+        log.debug("GET /users");
+        return userService.getAll();
+    }
+
+    // READ BY ID
+    @GetMapping("/{id}")
+    public User getById(@PathVariable long id) {
+        log.debug("GET /users/{}", id);
+        return userService.getById(id);
+    }
+
+    // FRIENDS
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addFriend(@PathVariable long id, @PathVariable long friendId) {
+        log.info("PUT /users/{}/friends/{}", id, friendId);
+        userService.addFriend(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public void removeFriend(@PathVariable long id, @PathVariable long friendId) {
+        log.info("DELETE /users/{}/friends/{}", id, friendId);
+        userService.removeFriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public Collection<User> getFriends(@PathVariable long id) {
+        log.debug("GET /users/{}/friends", id);
+        return userService.getFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Collection<User> getCommonFriends(@PathVariable long id, @PathVariable long otherId) {
+        log.debug("GET /users/{}/friends/common/{}", id, otherId);
+        return userService.getCommonFriends(id, otherId);
     }
 }
