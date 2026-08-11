@@ -1,48 +1,62 @@
 package com.alonazarenko.controller;
 
-import com.alonazarenko.exception.ValidationException;
 import com.alonazarenko.model.Film;
+import com.alonazarenko.service.FilmService;
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
-@Slf4j
 @RestController
 @RequestMapping("/films")
 public class FilmController {
-    private final List<Film> films = new ArrayList<>();
-    private int nextId = 1;
 
-    private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
+    private final FilmService filmService;
 
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
+    }
+
+    // CREATE
     @PostMapping
-    public Film addFilm(@Valid @RequestBody Film film) {
-        film.setId(nextId++);
-        films.add(film);
-        log.info("New film added: {}", film);
-        return film;
+    public Film create(@Valid @RequestBody Film film) {
+        return filmService.create(film);
     }
 
+    // UPDATE
     @PutMapping
-    public Film updateFilm(@Valid @RequestBody Film film) {
-        for (int i = 0; i < films.size(); i++) {
-            if (films.get(i).getId() == film.getId()) {
-                films.set(i, film);
-                log.info("Film updated: {}", film);
-                return film;
-            }
-        }
-
-        log.warn("Film update failed. Film with id {} not found", film.getId());
-        throw new ValidationException("Film with id " + film.getId() + " not found");
+    public Film update(@Valid @RequestBody Film film) {
+        return filmService.update(film);
     }
 
+    // READ ALL
     @GetMapping
-    public List<Film> getAllFilms() {
-        return films;
+    public Collection<Film> getAll() {
+        return filmService.getAll();
+    }
+
+    // READ BY ID
+    @GetMapping("/{id}")
+    public Film getById(@PathVariable long id) {
+        return filmService.getById(id);
+    }
+
+    // LIKES
+
+    @PutMapping("/{id}/like/{userId}")
+    public void addLike(@PathVariable long id, @PathVariable long userId) {
+        filmService.addLike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void removeLike(@PathVariable long id, @PathVariable long userId) {
+        filmService.removeLike(id, userId);
+    }
+
+    // POPULAR
+    @GetMapping("/popular")
+    public Collection<Film> getPopularFilms(
+            @RequestParam(defaultValue = "10") int count) {
+        return filmService.getPopularFilms(count);
     }
 }
