@@ -1,13 +1,17 @@
 package com.alonazarenko.service;
 
 import com.alonazarenko.exception.NotFoundException;
+import com.alonazarenko.model.Friendship;
 import com.alonazarenko.model.User;
+import com.alonazarenko.storage.friend.FriendshipStorage;
 import com.alonazarenko.storage.user.UserStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.Collection;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -15,10 +19,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
 
+    @Qualifier("userDbStorage")
     private final UserStorage userStorage;
+    private final FriendshipStorage friendshipStorage;
 
     public User create(User user) {
-        log.debug("Creating user login={}", user.getLogin());
+        log.info("Create user login={}", user.getLogin());
         return userStorage.create(user);
     }
 
@@ -51,60 +57,52 @@ public class UserService {
     }
 
     public void addFriend(long userId, long friendId) {
-        log.info("Adding friend: userId={}, friendId={}", userId, friendId);
+        log.info("Adding friend: {} -> {}", userId, friendId);
 
-        User user = userStorage.getById(userId)
-                .orElseThrow(() -> {
-                    log.warn("User not found: id={}", userId);
-                    return new NotFoundException("User with id " + userId + " not found");
-                });
+        userStorage.getById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
-        User friend = userStorage.getById(friendId)
-                .orElseThrow(() -> {
-                    log.warn("Friend not found: id={}", friendId);
-                    return new NotFoundException("User with id " + friendId + " not found");
-                });
+        userStorage.getById(friendId)
+                .orElseThrow(() -> new NotFoundException("User not found: " + friendId));
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
-
-        log.info("Users {} and {} are now friends", userId, friendId);
+        friendshipStorage.save(new Friendship(userId, friendId));
     }
 
     public void removeFriend(long userId, long friendId) {
-        log.info("Removing friend: userId={}, friendId={}", userId, friendId);
+        log.info("Remove friend {} -> {}", userId, friendId);
 
-        User user = userStorage.getById(userId)
-                .orElseThrow(() -> new NotFoundException("User with id " + userId + " not found"));
+        userStorage.getById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
-        User friend = userStorage.getById(friendId)
-                .orElseThrow(() -> new NotFoundException("User with id " + friendId + " not found"));
+        userStorage.getById(friendId)
+                .orElseThrow(() -> new NotFoundException("User not found: " + friendId));
 
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
-
-        log.info("Friendship removed: {} <-> {}", userId, friendId);
+        friendshipStorage.delete(userId, friendId);
     }
 
     public Collection<User> getFriends(long userId) {
-        log.info("Getting friends for userId={}", userId);
+        userStorage.getById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
-        User user = userStorage.getById(userId)
-                .orElseThrow(() -> new NotFoundException("User with id " + userId + " not found"));
-
-        return user.getFriends().stream()
-                .map(id -> userStorage.getById(id)
-                        .orElseThrow(() -> new NotFoundException("User with id " + id + " not found")))
+        return friendshipStorage.findAllByUserId(userId).stream()
+                .map(Friendship::getFriendId)
+                .map(id -> userStorage.getById(id).orElseThrow())
                 .toList();
     }
 
-    public Collection<User> getCommonFriends(long id, long otherId) {
-        User user = getById(id);
-        User other = getById(otherId);
+    public Collection<User> getCommonFriends(long userId, long otherId) {
+        Set<Long> userFriends = friendshipStorage.findAllByUserId(userId).stream()
+                .map(Friendship::getFriendId)
+                .collect(Collectors.toSet());
 
-        return user.getFriends().stream()
-                .filter(other.getFriends()::contains)
-                .map(this::getById)
-                .collect(Collectors.toList());
+        Set<Long> otherFriends = friendshipStorage.findAllByUserId(otherId).stream()
+                .map(Friendship::getFriendId)
+                .collect(Collectors.toSet());
+
+        userFriends.retainAll(otherFriends);
+
+        return userFriends.stream()
+                .map(id -> userStorage.getById(id).orElseThrow())
+                .toList();
     }
 }

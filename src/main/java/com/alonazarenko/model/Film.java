@@ -2,12 +2,16 @@ package com.alonazarenko.model;
 
 import com.alonazarenko.validation.ReleaseDateConstraint;
 import jakarta.validation.constraints.*;
-import lombok.Data;
+import lombok.*;
+
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
+@Builder
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Film {
     private long id;
 
@@ -24,5 +28,11 @@ public class Film {
     @Positive
     private int duration;
 
+    @Builder.Default
+    private Set<Genre> genres = new HashSet<>();
+
+    private MpaRating mpa;
+
+    @Builder.Default
     private Set<Long> likes = new HashSet<>();
 }
