@@ -9,11 +9,7 @@ public interface FriendshipStorage {
 
     void save(Friendship friendship);
 
-    void update(Friendship friendship);
-
     void delete(long userId, long friendId);
-
-    Optional<Friendship> find(long userId, long friendId);
 
     Collection<Friendship> findAllByUserId(long userId);
 }

@@ -24,25 +24,14 @@ public class InMemoryFriendshipStorage implements FriendshipStorage {
     }
 
     @Override
-    public void update(Friendship friendship) {
-        save(friendship);
-    }
-
-    @Override
     public void delete(long userId, long friendId) {
         friendships.remove(key(userId, friendId));
-        friendships.remove(key(friendId, userId));
-    }
-
-    @Override
-    public Optional<Friendship> find(long userId, long friendId) {
-        return Optional.ofNullable(friendships.get(key(userId, friendId)));
     }
 
     @Override
     public Collection<Friendship> findAllByUserId(long userId) {
         return friendships.values().stream()
-                .filter(f -> f.getUserId() == userId || f.getFriendId() == userId)
-                .collect(Collectors.toList());
+                .filter(f -> f.getUserId() == userId)
+                .toList();
     }
 }
