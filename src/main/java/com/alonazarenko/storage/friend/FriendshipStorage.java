@@ -3,7 +3,6 @@ package com.alonazarenko.storage.friend;
 import com.alonazarenko.model.Friendship;
 
 import java.util.Collection;
-import java.util.Optional;
 
 public interface FriendshipStorage {
 
