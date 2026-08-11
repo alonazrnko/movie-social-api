@@ -3,14 +3,16 @@ package com.alonazarenko.model;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class User {
 
-    private int id;
+    private long id;
 
-    @NotBlank(message = "Email cannot be empty")
-    @Email(message = "Email must be valid")
+    @NotBlank
+    @Email
     private String email;
 
     @NotBlank
@@ -19,6 +21,8 @@ public class User {
 
     private String name;
 
-    @PastOrPresent(message = "Birthday cannot be in the future")
+    @PastOrPresent
     private LocalDate birthday;
+
+    private Set<Long> friends = new HashSet<>();
 }
