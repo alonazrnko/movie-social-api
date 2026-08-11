@@ -1,5 +1,6 @@
 package com.alonazarenko.storage.film;
 
+import com.alonazarenko.exception.NotFoundException;
 import com.alonazarenko.model.Film;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -38,5 +39,19 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Collection<Film> getAll() {
         log.debug("Getting all films, count={}", films.size());
         return films.values();
+    }
+
+    @Override
+    public void addLike(long filmId, long userId) {
+        Film film = getById(filmId)
+                .orElseThrow(() -> new NotFoundException("Film not found"));
+        film.getLikes().add(userId);
+    }
+
+    @Override
+    public void removeLike(long filmId, long userId) {
+        Film film = getById(filmId)
+                .orElseThrow(() -> new NotFoundException("Film not found"));
+        film.getLikes().remove(userId);
     }
 }
