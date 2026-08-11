@@ -17,57 +17,51 @@ public class UserController {
 
     private final UserService userService;
 
-    // CREATE
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        log.info("POST /users — create user login={}", user.getLogin());
+        log.info("Create user login={}", user.getLogin());
         return userService.create(user);
     }
 
-    // UPDATE
     @PutMapping
     public User update(@Valid @RequestBody User user) {
-        log.info("PUT /users — update user id={}", user.getId());
+        log.info("Update user id={}", user.getId());
         return userService.update(user);
     }
 
-    // READ ALL
     @GetMapping
     public Collection<User> getAll() {
-        log.debug("GET /users");
+        log.debug("Get all users");
         return userService.getAll();
     }
 
-    // READ BY ID
     @GetMapping("/{id}")
     public User getById(@PathVariable long id) {
-        log.debug("GET /users/{}", id);
+        log.debug("Get user id={}", id);
         return userService.getById(id);
     }
 
-    // FRIENDS
-
     @PutMapping("/{id}/friends/{friendId}")
     public void addFriend(@PathVariable long id, @PathVariable long friendId) {
-        log.info("PUT /users/{}/friends/{}", id, friendId);
+        log.info("Add friend {} -> {}", id, friendId);
         userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public void removeFriend(@PathVariable long id, @PathVariable long friendId) {
-        log.info("DELETE /users/{}/friends/{}", id, friendId);
+        log.info("Remove friend {} -> {}", id, friendId);
         userService.removeFriend(id, friendId);
     }
 
     @GetMapping("/{id}/friends")
     public Collection<User> getFriends(@PathVariable long id) {
-        log.debug("GET /users/{}/friends", id);
+        log.debug("Get friends for user id={}", id);
         return userService.getFriends(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public Collection<User> getCommonFriends(@PathVariable long id, @PathVariable long otherId) {
-        log.debug("GET /users/{}/friends/common/{}", id, otherId);
+        log.debug("Get common friends {} & {}", id, otherId);
         return userService.getCommonFriends(id, otherId);
     }
 }
