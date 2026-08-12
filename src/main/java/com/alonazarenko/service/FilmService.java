@@ -1,6 +1,6 @@
 package com.alonazarenko.service;
 
-import com.alonazarenko.dto.FilmRequestDto;
+import com.alonazarenko.dao.dto.FilmRequestDto;
 import com.alonazarenko.exception.NotFoundException;
 import com.alonazarenko.model.Film;
 import com.alonazarenko.model.Genre;

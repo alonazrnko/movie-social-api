@@ -1,6 +1,6 @@
 package com.alonazarenko.controller;
 
-import com.alonazarenko.dto.FilmRequestDto;
+import com.alonazarenko.dao.dto.FilmRequestDto;
 import com.alonazarenko.model.Film;
 import com.alonazarenko.service.FilmService;
 import jakarta.validation.Valid;

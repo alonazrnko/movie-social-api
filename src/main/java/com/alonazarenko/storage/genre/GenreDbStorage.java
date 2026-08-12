@@ -1,5 +1,6 @@
 package com.alonazarenko.storage.genre;
 
+import com.alonazarenko.dao.repository.mappers.GenreRowMapper;
 import com.alonazarenko.model.Genre;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;

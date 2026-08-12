@@ -1,9 +1,10 @@
 package com.alonazarenko.storage.film;
 
+import com.alonazarenko.dao.repository.mappers.FilmRowMapper;
 import com.alonazarenko.model.Film;
 import com.alonazarenko.model.MpaRating;
-import com.alonazarenko.storage.genre.GenreRowMapper;
-import com.alonazarenko.storage.mpa.MpaRowMapper;
+import com.alonazarenko.dao.repository.mappers.GenreRowMapper;
+import com.alonazarenko.dao.repository.mappers.MpaRowMapper;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

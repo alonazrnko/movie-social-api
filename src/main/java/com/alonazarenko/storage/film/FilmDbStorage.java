@@ -1,11 +1,12 @@
 package com.alonazarenko.storage.film;
 
+import com.alonazarenko.dao.repository.mappers.FilmRowMapper;
 import com.alonazarenko.exception.NotFoundException;
 import com.alonazarenko.model.Film;
 import com.alonazarenko.model.Genre;
 import com.alonazarenko.model.MpaRating;
-import com.alonazarenko.storage.genre.GenreRowMapper;
-import com.alonazarenko.storage.mpa.MpaRowMapper;
+import com.alonazarenko.dao.repository.mappers.GenreRowMapper;
+import com.alonazarenko.dao.repository.mappers.MpaRowMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;

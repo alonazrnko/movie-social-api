@@ -1,5 +1,6 @@
 package com.alonazarenko.storage.user;
 
+import com.alonazarenko.dao.repository.mappers.UserRowMapper;
 import com.alonazarenko.model.User;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
