@@ -8,13 +8,13 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public class FriendRepository extends BaseRepository<Friendship> {
+public class FriendshipRepository extends BaseRepository<Friendship> {
     private static final String FIND_BY_USER_ID_SQL = "SELECT * FROM friends WHERE user_id = ?";
     private static final String INSERT_SQL = "INSERT INTO friends (user_id, friend_id, status) VALUES (?, ?, ?)";
     private static final String DELETE_BY_IDS_SQL = "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
     private static final String EXISTS_SQL = "SELECT COUNT(*) FROM friends WHERE user_id = ? AND friend_id = ?";
 
-    public FriendRepository(JdbcTemplate jdbc, RowMapper<Friendship> mapper) {
+    public FriendshipRepository(JdbcTemplate jdbc, RowMapper<Friendship> mapper) {
         super(jdbc, mapper);
     }
 
