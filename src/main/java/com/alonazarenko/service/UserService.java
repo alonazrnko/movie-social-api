@@ -65,7 +65,7 @@ public class UserService {
         userStorage.getById(friendId)
                 .orElseThrow(() -> new NotFoundException("User not found: " + friendId));
 
-        friendshipStorage.save(new Friendship(userId, friendId));
+        friendshipStorage.save(new Friendship());
     }
 
     public void removeFriend(long userId, long friendId) {
