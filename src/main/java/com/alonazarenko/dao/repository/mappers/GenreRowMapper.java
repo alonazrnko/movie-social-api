@@ -1,4 +1,4 @@
-package com.alonazarenko.storage.genre;
+package com.alonazarenko.dao.repository.mappers;
 
 import com.alonazarenko.model.Genre;
 import org.springframework.jdbc.core.RowMapper;

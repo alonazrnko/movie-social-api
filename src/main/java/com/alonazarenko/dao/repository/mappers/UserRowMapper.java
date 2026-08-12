@@ -1,4 +1,4 @@
-package com.alonazarenko.storage.user;
+package com.alonazarenko.dao.repository.mappers;
 
 import com.alonazarenko.model.User;
 import org.springframework.jdbc.core.RowMapper;

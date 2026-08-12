@@ -1,4 +1,4 @@
-package com.alonazarenko.storage.film;
+package com.alonazarenko.dao.repository.mappers;
 
 import com.alonazarenko.model.Film;
 import com.alonazarenko.model.MpaRating;

@@ -1,4 +1,4 @@
-package com.alonazarenko.storage.mpa;
+package com.alonazarenko.dao.repository.mappers;
 
 import com.alonazarenko.model.MpaRating;
 import org.springframework.jdbc.core.RowMapper;

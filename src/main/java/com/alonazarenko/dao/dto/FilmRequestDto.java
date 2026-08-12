@@ -1,4 +1,4 @@
-package com.alonazarenko.dto;
+package com.alonazarenko.dao.dto;
 
 import com.alonazarenko.validation.ReleaseDateConstraint;
 import jakarta.validation.constraints.NotBlank;

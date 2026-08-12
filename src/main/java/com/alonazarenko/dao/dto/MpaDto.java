@@ -1,10 +1,11 @@
-package com.alonazarenko.dto;
+package com.alonazarenko.dao.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class GenreDto {
+public class MpaDto {
+
     @NotNull
     private Long id;
 }
