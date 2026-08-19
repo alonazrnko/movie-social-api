@@ -1,15 +1,11 @@
 package com.alonazarenko.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 public class MpaRating {
+    @NotNull(message = "MPA Rating ID is required")
     private long id;
     private String name;
 }

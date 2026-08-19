@@ -1,27 +1,17 @@
 package com.alonazarenko.model;
 
-import jakarta.validation.constraints.*;
 import lombok.*;
 import java.time.LocalDate;
+import java.util.List;
 
-@Builder
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@EqualsAndHashCode(of = {"email"})
 public class User {
 
     private long id;
-
-    @NotBlank
-    @Email
     private String email;
-
-    @NotBlank
-    @Pattern(regexp = "\\S+", message = "Login cannot contain spaces")
     private String login;
-
     private String name;
-
-    @PastOrPresent
     private LocalDate birthday;
+    private List<Friendship> friends;
 }
