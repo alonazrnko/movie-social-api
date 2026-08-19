@@ -1,8 +1,10 @@
 package com.alonazarenko.controller;
 
+import com.alonazarenko.dao.dto.film.FilmDto;
 import com.alonazarenko.dao.dto.user.NewUserRequest;
 import com.alonazarenko.dao.dto.user.UpdateUserRequest;
 import com.alonazarenko.dao.dto.user.UserDto;
+import com.alonazarenko.service.FilmService;
 import com.alonazarenko.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import java.util.Collection;
 public class UserController {
 
     private final UserService userService;
+    private final FilmService filmService;
 
     @PostMapping
     public UserDto create(@Valid @RequestBody NewUserRequest request) {
@@ -46,5 +49,13 @@ public class UserController {
     public UserDto getById(@PathVariable long id) {
         log.debug("Get user id={}", id);
         return userService.getById(id);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public Collection<FilmDto> getRecommendations(@PathVariable long id) {
+        log.info("User: request to get recommendations for userId={}", id);
+        Collection<FilmDto> recommendations = filmService.getRecommendations(id);
+        log.info("Film: retrieved all recommendations for userId={}", id);
+        return recommendations;
     }
 }

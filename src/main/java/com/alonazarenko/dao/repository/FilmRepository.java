@@ -19,6 +19,8 @@ public class FilmRepository extends BaseRepository<Film> {
             "ON f.film_id = l.film_id LEFT JOIN film_genres fg ON f.film_id = fg.film_id WHERE (? IS NULL OR fg.genre_id = ?) " +
             "AND (? IS NULL OR EXTRACT(YEAR FROM f.release_date) = ?) GROUP BY f.film_id ORDER BY COUNT(l.user_id) " +
             "DESC, f.film_id FETCH FIRST ? ROWS ONLY";
+    private static final String FIND_ALL_LIKED_FILMS = "SELECT f.* FROM films f JOIN likes l ON f.film_id = l.film_id " +
+            "WHERE l.user_id = ?";
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -66,5 +68,9 @@ public class FilmRepository extends BaseRepository<Film> {
                 year, year,
                 count
         );
+    }
+
+    public Collection<Film> getLikedFilmsByUserId(long userId) {
+        return findMany(FIND_ALL_LIKED_FILMS, userId);
     }
 }

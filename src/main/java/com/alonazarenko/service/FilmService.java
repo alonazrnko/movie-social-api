@@ -5,8 +5,10 @@ import com.alonazarenko.dao.dto.film.FilmMapper;
 import com.alonazarenko.dao.dto.film.NewFilmRequest;
 import com.alonazarenko.dao.dto.film.UpdateFilmRequest;
 import com.alonazarenko.dao.repository.FilmRepository;
+import com.alonazarenko.dao.repository.UserRepository;
 import com.alonazarenko.exception.NotFoundException;
 import com.alonazarenko.model.Film;
+import com.alonazarenko.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FilmService {
     private final FilmRepository filmRepository;
+    private final UserRepository userRepository;
     private final FilmMapper filmMapper;
     private final GenreService genreService;
     private final LikeService likeService;
@@ -84,6 +87,60 @@ public class FilmService {
 
         return filmRepository.getPopularFilms(genreId, year, count).stream()
                 .map(this::updateCollections)
+                .map(filmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public Map<Long, Collection<Film>> getLikedFilmsByAllUsers() {
+        List<Long> allUsersIds = userRepository.getAll().stream()
+                .map(User::getId)
+                .toList();
+
+        Map<Long, Collection<Film>> likedFilmsByAllUsers = new HashMap<>();
+        for (Long id : allUsersIds) {
+            likedFilmsByAllUsers.put(id, filmRepository.getLikedFilmsByUserId(id));
+        }
+
+        return likedFilmsByAllUsers;
+
+    }
+
+    public Collection<FilmDto> getRecommendations(long userId) {
+        User user = userRepository.getById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        Collection<Film> userLikedFilms = filmRepository.getLikedFilmsByUserId(userId);
+        if (userLikedFilms.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<Long, Collection<Film>> likedFilmsByAllUsers = getLikedFilmsByAllUsers();
+        Set<Film> userLikesSet = new HashSet<>(userLikedFilms);
+
+        Optional<Map.Entry<Long, Collection<Film>>> targetUserEntry = likedFilmsByAllUsers.entrySet().stream()
+                .filter(entry -> !entry.getKey().equals(userId))
+                .max(Comparator.comparingInt(entry -> {
+                    Set<Film> otherLikesSet = new HashSet<>(entry.getValue());
+                    Set<Film> intesection = new HashSet<>(userLikesSet);
+                    intesection.retainAll(otherLikesSet);
+                    return intesection.size();
+                }));
+
+        if (targetUserEntry.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Collection<Film> targetUserLikedFilms = targetUserEntry.get().getValue();
+        Set<Film> targetLikesSet = new HashSet<>(targetUserLikedFilms);
+
+        targetLikesSet.removeAll(userLikedFilms);
+
+        if (targetLikesSet.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return targetLikesSet.stream()
+                .map((this::updateCollections))
                 .map(filmMapper::mapToFilmDto)
                 .toList();
     }
