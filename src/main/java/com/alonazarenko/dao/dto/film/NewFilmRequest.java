@@ -1,6 +1,7 @@
 package com.alonazarenko.dao.dto.film;
 
 import com.alonazarenko.model.MpaRating;
+import com.alonazarenko.validation.ReleaseDateConstraint;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -23,18 +24,13 @@ public class NewFilmRequest {
 
     @NotNull(message = "Release date is required")
     @PastOrPresent(message = "The release date cannot be in the future")
+    @ReleaseDateConstraint
     private LocalDate releaseDate;
-
-    @AssertTrue(message = "The release date cannot be earlier than December 28, 1895")
-    public boolean isValidReleaseDate() {
-        return releaseDate == null || !releaseDate.isBefore(LocalDate.of(1895, 12, 28));
-    }
 
     @Positive(message = "The duration must be positive")
     private Integer duration;
 
     @NotNull(message = "MPA Rating is required")
-    @Valid
     private Long mpa;
 
     private Set<Long> genres = new HashSet<>();

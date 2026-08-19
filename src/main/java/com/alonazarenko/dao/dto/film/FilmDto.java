@@ -1,7 +1,7 @@
 package com.alonazarenko.dao.dto.film;
 
+import com.alonazarenko.dao.dto.mpa.MpaDto;
 import com.alonazarenko.model.Genre;
-import com.alonazarenko.model.MpaRating;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -18,7 +18,7 @@ public class FilmDto {
     private String description;
     private LocalDate releaseDate;
     private Integer duration;
-    private MpaRating mpa;
+    private MpaDto mpa;
 
     private Set<Genre> genres = new HashSet<>();
 

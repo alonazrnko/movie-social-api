@@ -36,7 +36,7 @@ public final class FilmMapper {
         dto.setDescription(film.getDescription());
         dto.setReleaseDate(film.getReleaseDate());
         dto.setDuration(film.getDuration());
-        dto.setMpa(mpaService.getMpaById(film.getMpa()));
+        dto.setMpa(mpaService.getById(film.getMpa()));
 
         Set<Genre> genres = genreService.getGenresByFilmId(film.getId());
         dto.setGenres(genres);

@@ -13,5 +13,4 @@ public class UpdateFriendshipRequest {
     @NotNull(message = "friend ID cannot be empty")
     @Positive(message = "friend ID must be positive")
     private Long friendId;
-    private String status;
 }
