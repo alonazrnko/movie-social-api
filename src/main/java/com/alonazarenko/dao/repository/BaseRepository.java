@@ -30,13 +30,6 @@ public abstract class BaseRepository<T> {
         return jdbc.query(query, mapper, params);
     }
 
-
-    protected boolean delete(String query, long id) {
-        int rowsDeleted = jdbc.update(query, id);
-        return rowsDeleted > 0;
-    }
-
-
     protected void update(String query, Object... params) {
         int rowsUpdated = jdbc.update(query, params);
         if (rowsUpdated == 0) {
@@ -55,7 +48,7 @@ public abstract class BaseRepository<T> {
             return ps;
         }, keyHolder);
 
-        Integer id = keyHolder.getKeyAs(Integer.class);
+        Long id = keyHolder.getKeyAs(Long.class);
 
         if (id != null) {
             return id;
@@ -64,7 +57,7 @@ public abstract class BaseRepository<T> {
         }
     }
 
-    protected boolean existsById(String query, Object... params) {
+    protected boolean exists(String query, Object... params) {
         return jdbc.queryForObject(query, Boolean.class, params);
     }
 
