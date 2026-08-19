@@ -1,4 +1,4 @@
-MERGE INTO genres (id, name) VALUES
+MERGE INTO genres (genre_id, name) VALUES
 (1, 'Comedy'),
 (2, 'Drama'),
 (3, 'Animation'),
@@ -6,7 +6,7 @@ MERGE INTO genres (id, name) VALUES
 (5, 'Documentary'),
 (6, 'Action');
 
-MERGE INTO mpa_ratings (id, name) KEY (id) VALUES
+MERGE INTO mpa_ratings (mpa_id, name) KEY (mpa_id) VALUES
 (1, 'G'),
 (2, 'PG'),
 (3, 'PG-13'),
