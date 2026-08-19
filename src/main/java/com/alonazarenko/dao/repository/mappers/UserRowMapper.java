@@ -4,9 +4,9 @@ import com.alonazarenko.model.User;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
 
 @Component
 public class UserRowMapper implements RowMapper<User> {
@@ -15,11 +15,15 @@ public class UserRowMapper implements RowMapper<User> {
     public User mapRow(ResultSet rs, int rowNum) throws SQLException {
         User user = new User();
 
-        user.setId(rs.getLong("id"));
+        user.setId(rs.getLong("user_id"));
+        user.setName(rs.getString("name"));
         user.setEmail(rs.getString("email"));
         user.setLogin(rs.getString("login"));
-        user.setName(rs.getString("name"));
-        user.setBirthday(rs.getObject("birthday", LocalDate.class));
+
+        Date birthday = rs.getDate("birthday");
+        if (birthday != null) {
+            user.setBirthday(birthday.toLocalDate());
+        }
 
         return user;
     }
