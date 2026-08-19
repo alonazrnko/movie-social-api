@@ -1,4 +1,4 @@
-MERGE INTO genres (genre_id, name) VALUES
+MERGE INTO genres (genre_id, name) KEY (genre_id) VALUES
 (1, 'Comedy'),
 (2, 'Drama'),
 (3, 'Animation'),
