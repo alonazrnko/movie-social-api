@@ -1,6 +1,6 @@
 package com.alonazarenko.controller;
 
-import com.alonazarenko.model.Genre;
+import com.alonazarenko.dao.dto.genre.GenreDto;
 import com.alonazarenko.service.GenreService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,8 +18,12 @@ public class GenreController {
     private final GenreService genreService;
 
     @GetMapping
-    public List<Genre> getAllGenres() { return genreService.getAllGenres(); }
+    public List<GenreDto> getAllGenres() {
+        return genreService.getAllGenres();
+    }
 
     @GetMapping("/{id}")
-    public Genre getGenreById(@PathVariable int id) { return genreService.getGenreById(id); }
+    public GenreDto getGenreById(@PathVariable long id) {
+        return genreService.getGenreById(id);
+    }
 }
