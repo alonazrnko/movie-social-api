@@ -1,8 +1,9 @@
 package com.alonazarenko.service;
 
+import com.alonazarenko.dao.dto.mpa.MpaDto;
+import com.alonazarenko.dao.dto.mpa.MpaMapper;
+import com.alonazarenko.dao.repository.MpaRepository;
 import com.alonazarenko.exception.NotFoundException;
-import com.alonazarenko.model.MpaRating;
-import com.alonazarenko.storage.mpa.MpaStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,14 +13,24 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MpaService {
 
-    private final MpaStorage mpaStorage;
+    private final MpaRepository mpaRepository;
 
-    public List<MpaRating> getAll() {
-        return mpaStorage.getAll();
+    public List<MpaDto> getAll() {
+        return mpaRepository.findAll().stream()
+                .map(MpaMapper::mapToMpaDto)
+                .toList();
     }
 
-    public MpaRating getById(int id) {
-        return mpaStorage.getById(id)
-                .orElseThrow(() -> new NotFoundException("MPA not found"));
+    public MpaDto getById(long mpaId) {
+        return mpaRepository.findById(mpaId)
+                .map(MpaMapper::mapToMpaDto)
+                .orElseThrow(() -> new NotFoundException("MPA with ID " + mpaId + " not found"));
+
+    }
+
+    public void validateMpaExists(long mpaId) {
+        if (!mpaRepository.existsById(mpaId)) {
+            throw new NotFoundException("MPA with id " + mpaId + " not found");
+        }
     }
 }

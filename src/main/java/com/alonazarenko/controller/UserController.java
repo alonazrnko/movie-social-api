@@ -1,6 +1,8 @@
 package com.alonazarenko.controller;
 
-import com.alonazarenko.model.User;
+import com.alonazarenko.dao.dto.user.NewUserRequest;
+import com.alonazarenko.dao.dto.user.UpdateUserRequest;
+import com.alonazarenko.dao.dto.user.UserDto;
 import com.alonazarenko.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,50 +20,31 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public User create(@Valid @RequestBody User user) {
-        log.info("Create user login={}", user.getLogin());
-        return userService.create(user);
+    public UserDto create(@Valid @RequestBody NewUserRequest request) {
+        log.info("Create user login={}", request.getLogin());
+        return userService.create(request);
     }
 
     @PutMapping
-    public User update(@Valid @RequestBody User user) {
-        log.info("Update user id={}", user.getId());
-        return userService.update(user);
+    public UserDto update(@Valid @RequestBody UpdateUserRequest request) {
+        log.info("Update user id={}", request.getId());
+
+        if (request.getName() == null || request.getName().isBlank()) {
+            request.setName(request.getLogin());
+        }
+
+        return userService.update(request.getId(), request);
     }
 
     @GetMapping
-    public Collection<User> getAll() {
+    public Collection<UserDto> getAll() {
         log.debug("Get all users");
         return userService.getAll();
     }
 
     @GetMapping("/{id}")
-    public User getById(@PathVariable long id) {
+    public UserDto getById(@PathVariable long id) {
         log.debug("Get user id={}", id);
         return userService.getById(id);
-    }
-
-    @PutMapping("/{id}/friends/{friendId}")
-    public void addFriend(@PathVariable long id, @PathVariable long friendId) {
-        log.info("Add friend {} -> {}", id, friendId);
-        userService.addFriend(id, friendId);
-    }
-
-    @DeleteMapping("/{id}/friends/{friendId}")
-    public void removeFriend(@PathVariable long id, @PathVariable long friendId) {
-        log.info("Remove friend {} -> {}", id, friendId);
-        userService.removeFriend(id, friendId);
-    }
-
-    @GetMapping("/{id}/friends")
-    public Collection<User> getFriends(@PathVariable long id) {
-        log.debug("Get friends for user id={}", id);
-        return userService.getFriends(id);
-    }
-
-    @GetMapping("/{id}/friends/common/{otherId}")
-    public Collection<User> getCommonFriends(@PathVariable long id, @PathVariable long otherId) {
-        log.debug("Get common friends {} & {}", id, otherId);
-        return userService.getCommonFriends(id, otherId);
     }
 }

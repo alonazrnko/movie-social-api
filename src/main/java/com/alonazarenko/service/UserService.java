@@ -1,108 +1,65 @@
 package com.alonazarenko.service;
 
+import com.alonazarenko.dao.dto.user.NewUserRequest;
+import com.alonazarenko.dao.dto.user.UpdateUserRequest;
+import com.alonazarenko.dao.dto.user.UserDto;
+import com.alonazarenko.dao.dto.user.UserMapper;
+import com.alonazarenko.dao.repository.FriendshipRepository;
+import com.alonazarenko.dao.repository.UserRepository;
 import com.alonazarenko.exception.NotFoundException;
-import com.alonazarenko.model.Friendship;
 import com.alonazarenko.model.User;
-import com.alonazarenko.storage.friend.FriendshipStorage;
-import com.alonazarenko.storage.user.UserStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
+    private final UserRepository userRepository;
+    private final FriendshipRepository friendshipRepository;
 
-    @Qualifier("userDbStorage")
-    private final UserStorage userStorage;
-    private final FriendshipStorage friendshipStorage;
+    public UserDto create(NewUserRequest request) {
+        log.info("Create user login={}", request.getLogin());
 
-    public User create(User user) {
-        log.info("Create user login={}", user.getLogin());
-        return userStorage.create(user);
+        User user = UserMapper.mapToUser(request);
+        user = userRepository.create(user);
+        return UserMapper.mapToUserDto(user);
     }
 
-    public User update(User user) {
-        log.debug("Updating user id={}", user.getId());
+    public UserDto update(long userId, UpdateUserRequest request) {
+        log.debug("Updating user id={}", request.getId());
 
-        userStorage.getById(user.getId())
-                .orElseThrow(() -> {
-                    log.warn("User with id={} not found for update", user.getId());
-                    return new NotFoundException(
-                            "User with id " + user.getId() + " not found"
-                    );
-                });
+        User updatedUser = userRepository.getById(userId)
+                .map(user -> UserMapper.updateUserFields(user, request))
+                .orElseThrow(() -> new NotFoundException("User with id " + userId + " not found"));
+        updatedUser = userRepository.update(updatedUser);
 
-        User updatedUser = userStorage.update(user);
-        log.info("User updated successfully id={}", user.getId());
-        return updatedUser;
+        log.info("User updated successfully id={}", request.getId());
+        return UserMapper.mapToUserDto(updateCollections(updatedUser, updatedUser.getId()));
     }
 
-    public Collection<User> getAll() {
-        return userStorage.getAll();
+    public Collection<UserDto> getAll() {
+        return userRepository.getAll().stream()
+                .map(user -> updateCollections(user, user.getId()))
+                .map(UserMapper::mapToUserDto)
+                .toList();
     }
 
-    public User getById(long id) {
-        return userStorage.getById(id)
+    public UserDto getById(long id) {
+        User user = userRepository.getById(id)
                 .orElseThrow(() -> {
                     log.warn("User not found id={}", id);
                     return new NotFoundException("User not found");
                 });
+
+        return UserMapper.mapToUserDto(updateCollections(user, id));
     }
 
-    public void addFriend(long userId, long friendId) {
-        log.info("Adding friend: {} -> {}", userId, friendId);
-
-        userStorage.getById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
-
-        userStorage.getById(friendId)
-                .orElseThrow(() -> new NotFoundException("User not found: " + friendId));
-
-        friendshipStorage.save(new Friendship(userId, friendId));
-    }
-
-    public void removeFriend(long userId, long friendId) {
-        log.info("Remove friend {} -> {}", userId, friendId);
-
-        userStorage.getById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
-
-        userStorage.getById(friendId)
-                .orElseThrow(() -> new NotFoundException("User not found: " + friendId));
-
-        friendshipStorage.delete(userId, friendId);
-    }
-
-    public Collection<User> getFriends(long userId) {
-        userStorage.getById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
-
-        return friendshipStorage.findAllByUserId(userId).stream()
-                .map(Friendship::getFriendId)
-                .map(id -> userStorage.getById(id).orElseThrow())
-                .toList();
-    }
-
-    public Collection<User> getCommonFriends(long userId, long otherId) {
-        Set<Long> userFriends = friendshipStorage.findAllByUserId(userId).stream()
-                .map(Friendship::getFriendId)
-                .collect(Collectors.toSet());
-
-        Set<Long> otherFriends = friendshipStorage.findAllByUserId(otherId).stream()
-                .map(Friendship::getFriendId)
-                .collect(Collectors.toSet());
-
-        userFriends.retainAll(otherFriends);
-
-        return userFriends.stream()
-                .map(id -> userStorage.getById(id).orElseThrow())
-                .toList();
+    public User updateCollections(User user, long userId) {
+        user.setFriends(friendshipRepository.findAllByUserId(userId));
+        return user;
     }
 }

@@ -1,6 +1,6 @@
 package com.alonazarenko.controller;
 
-import com.alonazarenko.model.MpaRating;
+import com.alonazarenko.dao.dto.mpa.MpaDto;
 import com.alonazarenko.service.MpaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,8 +18,12 @@ public class MpaController {
     private final MpaService mpaService;
 
     @GetMapping
-    public List<MpaRating> getAll() { return mpaService.getAll(); }
+    public List<MpaDto> getAll() {
+        return mpaService.getAll();
+    }
 
     @GetMapping("/{id}")
-    public MpaRating getById(@PathVariable int id) { return mpaService.getById(id); }
+    public MpaDto getById(@PathVariable long id) {
+        return mpaService.getById(id);
+    }
 }

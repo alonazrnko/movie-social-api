@@ -1,38 +1,25 @@
 package com.alonazarenko.model;
 
-import com.alonazarenko.validation.ReleaseDateConstraint;
-import jakarta.validation.constraints.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-@Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(of = {"id"})
 public class Film {
     private long id;
-
-    @NotBlank
     private String name;
-
-    @Size(max = 200)
     private String description;
-
-    @NotNull
-    @ReleaseDateConstraint
     private LocalDate releaseDate;
-
-    @Positive
-    private int duration;
-
-    @Builder.Default
-    private Set<Genre> genres = new HashSet<>();
-
-    private MpaRating mpa;
-
-    @Builder.Default
+    private Integer duration;
+    private Long mpa;
+    private Set<Long> genres = new HashSet<>();
     private Set<Long> likes = new HashSet<>();
 }

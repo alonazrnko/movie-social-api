@@ -1,135 +1,101 @@
 package com.alonazarenko.service;
 
-import com.alonazarenko.dto.FilmRequestDto;
+import com.alonazarenko.dao.dto.film.FilmDto;
+import com.alonazarenko.dao.dto.film.FilmMapper;
+import com.alonazarenko.dao.dto.film.NewFilmRequest;
+import com.alonazarenko.dao.dto.film.UpdateFilmRequest;
+import com.alonazarenko.dao.repository.FilmRepository;
 import com.alonazarenko.exception.NotFoundException;
 import com.alonazarenko.model.Film;
-import com.alonazarenko.model.Genre;
-import com.alonazarenko.model.MpaRating;
-import com.alonazarenko.storage.film.FilmStorage;
-import com.alonazarenko.storage.genre.GenreStorage;
-import com.alonazarenko.storage.mpa.MpaStorage;
-import com.alonazarenko.storage.user.UserStorage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class FilmService {
+    private final FilmRepository filmRepository;
+    private final FilmMapper filmMapper;
+    private final GenreService genreService;
+    private final LikeService likeService;
+    private final MpaService mpaService;
 
-    @Qualifier("filmDbStorage")
-    private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
-    private final MpaStorage mpaStorage;
-    private final GenreStorage genreStorage;
+    public FilmDto create(NewFilmRequest request) {
+        log.info("Creating film name={}", request.getName());
 
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage, MpaStorage mpaStorage, GenreStorage genreStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
-        this.mpaStorage = mpaStorage;
-        this.genreStorage = genreStorage;
-    }
+        mpaService.validateMpaExists(request.getMpa());
+        genreService.validateGenresExist(request.getGenres());
 
-    public Film create(FilmRequestDto dto) {
-        log.info("Creating film name={}", dto.getName());
+        Film film = filmMapper.mapToFilm(request);
+        film = filmRepository.create(film);
 
-        MpaRating mpa = mpaStorage.getById(dto.getMpa().getId())
-                .orElseThrow(() -> new NotFoundException("MPA not found"));
-
-        Set<Genre> genres = dto.getGenres() == null
-                ? new HashSet<>()
-                : dto.getGenres().stream()
-                .map(g -> genreStorage.getById(g.getId())
-                        .orElseThrow(() -> new NotFoundException("Genre not found")))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-
-        Film film = Film.builder()
-                .name(dto.getName())
-                .description(dto.getDescription())
-                .releaseDate(dto.getReleaseDate())
-                .duration(dto.getDuration())
-                .mpa(mpa)
-                .genres(genres)
-                .build();
-
-        return filmStorage.create(film);
-    }
-
-    public Film update(Film film) {
-        log.info("Updating film id={}", film.getId());
-
-        MpaRating mpa = mpaStorage.getById(film.getMpa().getId())
-                .orElseThrow(() -> new NotFoundException("MPA not found"));
-        film.setMpa(mpa);
-
-        Set<Genre> genres = film.getGenres().stream()
-                .map(g -> genreStorage.getById(g.getId())
-                        .orElseThrow(() -> new NotFoundException("Genre not found")))
-                .collect(Collectors.toSet());
+        Set<Long> genres = request.getGenres();
         film.setGenres(genres);
+        genreService.saveByFilm(film.getId(), genres);
 
-
-        filmStorage.getById(film.getId())
-                .orElseThrow(() -> {
-                    log.warn("Film not found: id={}", film.getId());
-                    return new NotFoundException("Film with id " + film.getId() + " not found");
-                });
-
-        return filmStorage.update(film);
+        return filmMapper.mapToFilmDto(film);
     }
 
-    public Film getById(long id) {
+    public FilmDto update(UpdateFilmRequest request) {
+        log.info("Updating film id={}", request.getId());
+
+        Film existingFilm = filmRepository.getById(request.getId())
+                .orElseThrow(() ->
+                        new NotFoundException("Film with id " + request.getId() + " not found")
+                );
+
+        mpaService.validateMpaExists(request.getMpa());
+        genreService.validateGenresExist(request.getGenres());
+
+        Film updatedFilm = filmMapper.updateFilmFields(existingFilm, request);
+        updatedFilm = filmRepository.update(updatedFilm);
+
+        Set<Long> genres = request.getGenres();
+        updatedFilm.setGenres(genres);
+        genreService.saveByFilm(updatedFilm.getId(), genres);
+
+        updatedFilm.setLikes(likeService.getLikesIdsByFilm(request.getId()));
+
+        return filmMapper.mapToFilmDto(updatedFilm);
+    }
+
+    public FilmDto getById(long id) {
         log.debug("Get film id={}", id);
 
-        return filmStorage.getById(id)
-                .orElseThrow(() -> {
-                    log.warn("Film not found id={}", id);
-                    return new NotFoundException("Film with id " + id + " not found");
-                });
+        Film film = filmRepository.getById(id)
+                .orElseThrow(() -> new NotFoundException("Film with id=" + id + " not found"));
+        return filmMapper.mapToFilmDto(updateCollections(film));
     }
 
-    public Collection<Film> getAll() {
+    public Collection<FilmDto> getAll() {
         log.debug("Get all films");
-        return filmStorage.getAll();
+        return filmRepository.getAll().stream()
+                .map(this::updateCollections)
+                .map(filmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
     }
 
-    public void addLike(long filmId, long userId) {
-        log.info("Add like filmId={} userId={}", filmId, userId);
-
-        getById(filmId);
-        userStorage.getById(userId)
-                .orElseThrow(() -> {
-                    log.warn("User not found: id={}", userId);
-                    return new NotFoundException("User with id " + userId + " not found");
-                });
-
-        filmStorage.addLike(filmId, userId);
-    }
-
-    public void removeLike(long filmId, long userId) {
-        log.info("Removing like: filmId={}, userId={}", filmId, userId);
-
-        getById(filmId);
-        userStorage.getById(userId)
-                .orElseThrow(() -> {
-                    log.warn("User not found: id={}", userId);
-                    return new NotFoundException("User with id " + userId + " not found");
-                });
-
-        filmStorage.removeLike(filmId, userId);
-    }
-
-    public Collection<Film> getPopularFilms(int count) {
+    public Collection<FilmDto> getPopularFilms(int count) {
         log.debug("Get top {} films", count);
 
-        return filmStorage.getAll().stream()
+        return filmRepository.getAll().stream()
+                .map(this::updateCollections)
                 .sorted(Comparator.comparingInt(
                         (Film f) -> f.getLikes().size()
                 ).reversed())
                 .limit(count)
+                .map(filmMapper::mapToFilmDto)
                 .toList();
+    }
+
+    private Film updateCollections(Film film) {
+        long id = film.getId();
+        film.setGenres(genreService.getGenresIdByFilm(id));
+        film.setLikes(likeService.getLikesIdsByFilm(id));
+        return film;
     }
 }
