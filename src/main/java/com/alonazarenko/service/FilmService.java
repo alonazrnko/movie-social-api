@@ -79,15 +79,11 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
-    public Collection<FilmDto> getPopularFilms(int count) {
+    public Collection<FilmDto> getPopularFilms(Integer genreId, Integer year, int count) {
         log.debug("Get top {} films", count);
 
-        return filmRepository.getAll().stream()
+        return filmRepository.getPopularFilms(genreId, year, count).stream()
                 .map(this::updateCollections)
-                .sorted(Comparator.comparingInt(
-                        (Film f) -> f.getLikes().size()
-                ).reversed())
-                .limit(count)
                 .map(filmMapper::mapToFilmDto)
                 .toList();
     }

@@ -13,7 +13,12 @@ public class FilmRepository extends BaseRepository<Film> {
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE film_id = ?";
     private static final String INSERT_QUERY = "INSERT INTO films(name, description, release_date, duration, mpa_id)" +
             "VALUES (?, ?, ?, ?, ?)";
-    private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? WHERE film_id = ?";
+    private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?," +
+            "duration = ?, mpa_id = ? WHERE film_id = ?";
+    private static final String FIND_POPULAR_FILMS_WITH_FILTERS_SQL = "SELECT f.* FROM films f LEFT JOIN likes l " +
+            "ON f.film_id = l.film_id LEFT JOIN film_genres fg ON f.film_id = fg.film_id WHERE (? IS NULL OR fg.genre_id = ?) " +
+            "AND (? IS NULL OR EXTRACT(YEAR FROM f.release_date) = ?) GROUP BY f.film_id ORDER BY COUNT(l.user_id) " +
+            "DESC, f.film_id FETCH FIRST ? ROWS ONLY";
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -52,5 +57,14 @@ public class FilmRepository extends BaseRepository<Film> {
 
     public Optional<Film> getById(Long id) {
         return findOne(FIND_BY_ID_QUERY, id);
+    }
+
+    public List<Film> getPopularFilms(Integer genreId, Integer year, int count) {
+        return findMany(
+                FIND_POPULAR_FILMS_WITH_FILTERS_SQL,
+                genreId, genreId,
+                year, year,
+                count
+        );
     }
 }
