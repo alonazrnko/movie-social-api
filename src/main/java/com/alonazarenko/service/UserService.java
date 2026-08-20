@@ -6,6 +6,7 @@ import com.alonazarenko.dao.dto.user.UserDto;
 import com.alonazarenko.dao.dto.user.UserMapper;
 import com.alonazarenko.dao.repository.FriendshipRepository;
 import com.alonazarenko.dao.repository.UserRepository;
+import com.alonazarenko.exception.InternalServerException;
 import com.alonazarenko.exception.NotFoundException;
 import com.alonazarenko.model.User;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,14 @@ public class UserService {
                 .map(user -> updateCollections(user, user.getId()))
                 .map(UserMapper::mapToUserDto)
                 .toList();
+    }
+
+    public void delete(long id) {
+        getById(id);
+        boolean deleted = userRepository.delete(id);
+        if (!deleted) {
+            throw new InternalServerException("Failed to delete user with id=" + id);
+        }
     }
 
     public UserDto getById(long id) {

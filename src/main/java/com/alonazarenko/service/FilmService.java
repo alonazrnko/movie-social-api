@@ -6,6 +6,7 @@ import com.alonazarenko.dao.dto.film.NewFilmRequest;
 import com.alonazarenko.dao.dto.film.UpdateFilmRequest;
 import com.alonazarenko.dao.repository.FilmRepository;
 import com.alonazarenko.dao.repository.UserRepository;
+import com.alonazarenko.exception.InternalServerException;
 import com.alonazarenko.exception.NotFoundException;
 import com.alonazarenko.model.Film;
 import com.alonazarenko.model.User;
@@ -64,6 +65,14 @@ public class FilmService {
         updatedFilm.setLikes(likeService.getLikesIdsByFilm(request.getId()));
 
         return filmMapper.mapToFilmDto(updatedFilm);
+    }
+
+    public void delete(long id) {
+        getById(id);
+        boolean deleted = filmRepository.delete(id);
+        if (!deleted) {
+            throw new InternalServerException("Failed to delete film with id=" + id);
+        }
     }
 
     public FilmDto getById(long id) {
