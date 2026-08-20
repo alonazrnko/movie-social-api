@@ -21,6 +21,8 @@ public class FilmRepository extends BaseRepository<Film> {
             "DESC, f.film_id FETCH FIRST ? ROWS ONLY";
     private static final String FIND_ALL_LIKED_FILMS = "SELECT f.* FROM films f JOIN likes l ON f.film_id = l.film_id " +
             "WHERE l.user_id = ?";
+    private static final String DELETE_FILM_SQL = "DELETE FROM films WHERE film_id = ?";
+
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -50,6 +52,10 @@ public class FilmRepository extends BaseRepository<Film> {
                 film.getId()
         );
         return film;
+    }
+
+    public boolean delete(long id) {
+        return delete(DELETE_FILM_SQL, id);
     }
 
     public Collection<Film> getAll() {
