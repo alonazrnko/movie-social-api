@@ -19,6 +19,7 @@ public class UserRepository extends BaseRepository<User> {
                     "WHERE f.user_id = ?";
     private static final String INSERT_QUERY = "INSERT INTO users(email, login, name, birthday) VALUES (?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE user_id = ?";
+    private static final String DELETE_USER_SQL = "DELETE FROM users WHERE user_id = ?";
 
     public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -46,6 +47,10 @@ public class UserRepository extends BaseRepository<User> {
                 user.getId()
         );
         return user;
+    }
+
+    public boolean delete(long id) {
+        return delete(DELETE_USER_SQL, id);
     }
 
     public Collection<User> getAll() {
