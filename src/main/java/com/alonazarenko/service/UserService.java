@@ -67,6 +67,12 @@ public class UserService {
         return UserMapper.mapToUserDto(updateCollections(user, id));
     }
 
+    public void validateUserExists(long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("User with id " + userId + " not found");
+        }
+    }
+
     public User updateCollections(User user, long userId) {
         user.setFriends(friendshipRepository.findAllByUserId(userId));
         return user;
