@@ -6,6 +6,7 @@ import com.alonazarenko.dao.dto.film.UpdateFilmRequest;
 import com.alonazarenko.service.FilmService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -44,5 +45,11 @@ public class FilmController {
             @RequestParam(required = false) Integer year
     ) {
         return filmService.getPopularFilms(genreId, year, count);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteFilm(@PathVariable long id) {
+        filmService.delete(id);
     }
 }
