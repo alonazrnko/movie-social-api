@@ -8,6 +8,7 @@ import com.alonazarenko.dao.repository.FilmRepository;
 import com.alonazarenko.dao.repository.UserRepository;
 import com.alonazarenko.exception.InternalServerException;
 import com.alonazarenko.exception.NotFoundException;
+import com.alonazarenko.exception.ValidationException;
 import com.alonazarenko.model.Film;
 import com.alonazarenko.model.User;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class FilmService {
     private final GenreService genreService;
     private final LikeService likeService;
     private final MpaService mpaService;
+    private final UserService userService;
 
     public FilmDto create(NewFilmRequest request) {
         log.info("Creating film name={}", request.getName());
@@ -149,6 +151,21 @@ public class FilmService {
         }
 
         return targetLikesSet.stream()
+                .map((this::updateCollections))
+                .map(filmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public List<FilmDto> getCommonFilms(long userId, long friendId) {
+        userService.validateUserExists(userId);
+        userService.validateUserExists(friendId);
+
+        if (userId == friendId) {
+            throw new ValidationException("User IDs must be different");
+        }
+
+        List<Film> commonFilms = filmRepository.getCommonFilms(userId, friendId);
+        return commonFilms.stream()
                 .map((this::updateCollections))
                 .map(filmMapper::mapToFilmDto)
                 .toList();
