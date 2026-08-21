@@ -5,6 +5,8 @@ import com.alonazarenko.dao.repository.ReviewRepository;
 import com.alonazarenko.exception.DuplicatedDataException;
 import com.alonazarenko.exception.NotFoundException;
 import com.alonazarenko.model.ReviewLike;
+import com.alonazarenko.model.enums.EventOperation;
+import com.alonazarenko.model.enums.EventType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ public class ReviewLikeService {
     private final ReviewLikeRepository reviewLikeRepository;
     private final ReviewRepository reviewRepository;
     private final UserService userService;
+    private final EventService eventService;
 
     public void addReaction(Long reviewId, Long userId, boolean isLike) {
         reviewRepository.findById(reviewId)
@@ -53,6 +56,13 @@ public class ReviewLikeService {
 
     public void addLike(Long reviewId, Long userId) {
         addReaction(reviewId, userId, true);
+
+        eventService.addEvent(
+                userId,
+                EventType.LIKE,
+                EventOperation.ADD,
+                reviewId
+        );
     }
 
     public void addDislike(Long reviewId, Long userId) {
@@ -62,6 +72,13 @@ public class ReviewLikeService {
     public void removeLike(Long reviewId, Long userId) {
         removeReaction(reviewId, userId, true);
         log.info("User {} deleted like to review {}", userId, reviewId);
+
+        eventService.addEvent(
+                userId,
+                EventType.LIKE,
+                EventOperation.REMOVE,
+                reviewId
+        );
     }
 
     public void removeDislike(Long reviewId, Long userId) {
