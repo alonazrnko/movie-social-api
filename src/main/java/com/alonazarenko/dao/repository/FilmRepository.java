@@ -41,6 +41,19 @@ public class FilmRepository extends BaseRepository<Film> {
             "LEFT JOIN likes l ON f.film_id = l.film_id WHERE fd.director_id = ? GROUP BY f.film_id, f.name, f.description, " +
             "f.release_date, f.duration, f.mpa_id, m.name ORDER BY likes_count DESC";
 
+    private static final String SEARCH_FILMS_BY_TITLE_SQL = "SELECT f.* FROM films f WHERE LOWER(f.name) LIKE LOWER(?) " +
+            "ORDER BY (SELECT COUNT(*) FROM likes l WHERE l.film_id = f.film_id) DESC";
+
+    private static final String SEARCH_FILMS_BY_DIRECTOR_SQL = "SELECT f.* FROM films f JOIN film_directors fd ON " +
+            "f.film_id = fd.film_id JOIN directors d ON fd.director_id = d.director_id WHERE LOWER(d.name) LIKE LOWER(?) " +
+            "ORDER BY (SELECT COUNT(*) FROM likes l WHERE l.film_id = f.film_id) DESC";
+
+    private static final String SEARCH_FILMS_BY_TITLE_AND_DIRECTOR_SQL = "SELECT f.* FROM films f LEFT JOIN film_directors " +
+            "fd ON f.film_id = fd.film_id LEFT JOIN directors d ON fd.director_id = d.director_id WHERE LOWER(f.name) " +
+            "LIKE LOWER(?) OR LOWER(d.name) LIKE LOWER(?) ORDER BY f.film_id";
+
+    private static final String SEARCH_FILMS_BY_DESCRIPTION_SQL = "SELECT f.* FROM films f WHERE LOWER(f.description) " +
+            "LIKE LOWER(?) ORDER BY (SELECT COUNT(*) FROM likes l WHERE l.film_id = f.film_id) DESC";
 
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
@@ -111,5 +124,44 @@ public class FilmRepository extends BaseRepository<Film> {
         } else {
             return findMany(FIND_BY_DIRECTOR_SORTED_BY_YEAR_SQL, directorId);
         }
+    }
+
+    public List<Film> searchFilms(String query, Set<String> searchBy) {
+        String searchPattern = "%" + query.toLowerCase() + "%";
+
+        List<Film> films;
+
+        if (searchBy.contains("title") && searchBy.contains("director")) {
+            films = findMany(SEARCH_FILMS_BY_TITLE_AND_DIRECTOR_SQL, searchPattern, searchPattern);
+        } else if (searchBy.contains("title")) {
+            films = findMany(SEARCH_FILMS_BY_TITLE_SQL, searchPattern);
+        } else if (searchBy.contains("description")) {
+            films = findMany(SEARCH_FILMS_BY_DESCRIPTION_SQL, searchPattern);
+        } else if (searchBy.contains("director")) {
+            films = findMany(SEARCH_FILMS_BY_DIRECTOR_SQL, searchPattern);
+        } else {
+            films = findMany(SEARCH_FILMS_BY_TITLE_AND_DIRECTOR_SQL, searchPattern, searchPattern);
+        }
+        return sortFilmsByPopularity(films);
+    }
+
+    private List<Film> sortFilmsByPopularity(List<Film> films) {
+        if (films.isEmpty()) {
+            return films;
+        }
+
+        Map<Long, Integer> likesCount = new HashMap<>();
+        for (Film film : films) {
+            String sql = "SELECT COUNT(*) FROM likes WHERE film_id = ?";
+            Integer count = jdbc.queryForObject(sql, Integer.class, film.getId());
+            likesCount.put(film.getId(), count != null ? count : 0);
+        }
+
+        films.sort((f1, f2) -> {
+            int likes1 = likesCount.getOrDefault(f1.getId(), 0);
+            int likes2 = likesCount.getOrDefault(f2.getId(), 0);
+            return Integer.compare(likes2, likes1);
+        });
+        return films;
     }
 }
