@@ -31,6 +31,7 @@ public class UpdateFilmRequest {
     private Long mpa;
 
     private Set<Long> genres = new HashSet<>();
+    private Set<Long> directors = new HashSet<>();
 
     @JsonSetter("genres")
     public void setGenresFromMaps(Set<Map<String, Long>> genreMaps) {
@@ -46,6 +47,16 @@ public class UpdateFilmRequest {
     public void setMpaToLong(MpaRating mpa) {
         if (mpa != null) {
             this.mpa = mpa.getId();
+        }
+    }
+
+    @JsonSetter("directors")
+    public void setDirectorsFromMaps(Set<Map<String, Long>> directorMaps) {
+        if (directorMaps != null) {
+            this.directors = directorMaps.stream()
+                    .map(map -> map.get("id"))
+                    .filter(id -> id != null)
+                    .collect(Collectors.toSet());
         }
     }
 

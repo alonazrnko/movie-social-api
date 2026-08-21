@@ -1,5 +1,7 @@
 package com.alonazarenko.dao.dto.film;
 
+import com.alonazarenko.dao.repository.DirectorRepository;
+import com.alonazarenko.model.Director;
 import com.alonazarenko.model.Film;
 import com.alonazarenko.model.Genre;
 import com.alonazarenko.service.GenreService;
@@ -16,6 +18,7 @@ public final class FilmMapper {
 
     private final MpaService mpaService;
     private final GenreService genreService;
+    private final DirectorRepository directorRepository;
 
     public Film mapToFilm(NewFilmRequest request) {
         Film film = new Film();
@@ -41,6 +44,9 @@ public final class FilmMapper {
         Set<Genre> genres = genreService.getGenresByFilmId(film.getId());
         dto.setGenres(genres);
 
+        Set<Director> directors = new HashSet<>(directorRepository.findDirectorsByFilmId(film.getId()));
+        dto.setDirectors(directors);
+
         dto.setLikes(film.getLikes());
         dto.setCreationDate(LocalDate.now());
         return dto;
@@ -64,6 +70,10 @@ public final class FilmMapper {
         }
         if (request.hasGenres()) {
             film.setGenres(request.getGenres());
+        }
+
+        if (request.hasDirectors()) {
+            film.setDirectors(request.getDirectors());
         }
 
         return film;

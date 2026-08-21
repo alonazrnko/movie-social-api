@@ -4,6 +4,7 @@ import com.alonazarenko.dao.dto.film.FilmDto;
 import com.alonazarenko.dao.dto.film.FilmMapper;
 import com.alonazarenko.dao.dto.film.NewFilmRequest;
 import com.alonazarenko.dao.dto.film.UpdateFilmRequest;
+import com.alonazarenko.dao.repository.DirectorRepository;
 import com.alonazarenko.dao.repository.FilmRepository;
 import com.alonazarenko.dao.repository.UserRepository;
 import com.alonazarenko.exception.InternalServerException;
@@ -24,17 +25,20 @@ import java.util.stream.Collectors;
 public class FilmService {
     private final FilmRepository filmRepository;
     private final UserRepository userRepository;
+    private final DirectorRepository directorRepository;
     private final FilmMapper filmMapper;
     private final GenreService genreService;
     private final LikeService likeService;
     private final MpaService mpaService;
     private final UserService userService;
+    private final DirectorService directorService;
 
     public FilmDto create(NewFilmRequest request) {
         log.info("Creating film name={}", request.getName());
 
         mpaService.validateMpaExists(request.getMpa());
         genreService.validateGenresExist(request.getGenres());
+        directorService.validateDirectorExists(request.getDirectors());
 
         Film film = filmMapper.mapToFilm(request);
         film = filmRepository.create(film);
@@ -42,6 +46,10 @@ public class FilmService {
         Set<Long> genres = request.getGenres();
         film.setGenres(genres);
         genreService.saveByFilm(film.getId(), genres);
+
+        Set<Long> directors = request.getDirectors();
+        film.setDirectors(directors);
+        directorRepository.addDirectorsToFilm(film.getId(), directors);
 
         return filmMapper.mapToFilmDto(film);
     }
@@ -56,6 +64,7 @@ public class FilmService {
 
         mpaService.validateMpaExists(request.getMpa());
         genreService.validateGenresExist(request.getGenres());
+        directorService.validateDirectorExists(request.getDirectors());
 
         Film updatedFilm = filmMapper.updateFilmFields(existingFilm, request);
         updatedFilm = filmRepository.update(updatedFilm);
@@ -63,6 +72,10 @@ public class FilmService {
         Set<Long> genres = request.getGenres();
         updatedFilm.setGenres(genres);
         genreService.saveByFilm(updatedFilm.getId(), genres);
+
+        Set<Long> directors = request.getDirectors();
+        updatedFilm.setDirectors(directors);
+        directorRepository.addDirectorsToFilm(request.getId(), directors);
 
         updatedFilm.setLikes(likeService.getLikesIdsByFilm(request.getId()));
 
@@ -171,10 +184,21 @@ public class FilmService {
                 .toList();
     }
 
+    public List<FilmDto> getFilmsByDirector(long directorId, String sortBy) {
+        if (directorRepository.findById(directorId).isEmpty()) {
+            throw new NotFoundException("Director with id " + directorId + " not found");
+        }
+        return filmRepository.findByDirectorIdSorted(directorId, sortBy).stream()
+                .map(this::updateCollections)
+                .map(filmMapper::mapToFilmDto)
+                .toList();
+    }
+
     private Film updateCollections(Film film) {
         long id = film.getId();
         film.setGenres(genreService.getGenresIdByFilm(id));
         film.setLikes(likeService.getLikesIdsByFilm(id));
+        film.setDirectors(directorService.getDirectorsIdsByFilm(id));
         return film;
     }
 }
