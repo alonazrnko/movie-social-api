@@ -194,6 +194,35 @@ public class FilmService {
                 .toList();
     }
 
+    public List<FilmDto> searchFilms(String query, Set<String> searchBy) {
+        if (query == null || query.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        validateSearchBy(searchBy);
+
+        return filmRepository.searchFilms(query.trim(), searchBy).stream()
+                .map(this::updateCollections)
+                .map(filmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    private void validateSearchBy(Set<String> searchBy) {
+        if (searchBy == null || searchBy.isEmpty()) {
+            throw new ValidationException(
+                    "The 'by' parameter must contain the value: title, director or description"
+            );
+        }
+
+        for (String param : searchBy) {
+            if (!param.equals("title") && !param.equals("director") && !param.equals("description")) {
+                throw new ValidationException(
+                        "Invalid value in parameter 'by': " + param
+                );
+            }
+        }
+    }
+
     private Film updateCollections(Film film) {
         long id = film.getId();
         film.setGenres(genreService.getGenresIdByFilm(id));
