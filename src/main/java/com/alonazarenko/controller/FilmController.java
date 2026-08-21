@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/films")
@@ -68,5 +71,18 @@ public class FilmController {
     ) {
         List<FilmDto> films = filmService.getFilmsByDirector(directorId, sortBy);
         return films;
+    }
+
+    @GetMapping("/search")
+    public List<FilmDto> searchFilms(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "title,director,description") String by) {
+
+        Set<String> searchBy = Stream.of(by.split(","))
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
+
+        return filmService.searchFilms(query, searchBy);
     }
 }
