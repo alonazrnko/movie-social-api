@@ -5,6 +5,8 @@ import com.alonazarenko.dao.repository.FriendshipRepository;
 import com.alonazarenko.dao.repository.UserRepository;
 import com.alonazarenko.exception.NotFoundException;
 import com.alonazarenko.model.Friendship;
+import com.alonazarenko.model.enums.EventOperation;
+import com.alonazarenko.model.enums.EventType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 public class FriendshipService {
     private final UserRepository userRepository;
     private final FriendshipRepository friendshipRepository;
+    private final EventService eventService;
 
     public void addFriend(long userId, long friendId) {
         log.info("Adding friend: {} -> {}", userId, friendId);
@@ -34,6 +37,13 @@ public class FriendshipService {
         friendship.setFriendId(friendId);
 
         friendshipRepository.add(friendship);
+
+        eventService.addEvent(
+                userId,
+                EventType.FRIEND,
+                EventOperation.ADD,
+                friendId
+        );
     }
 
     public void removeFriend(long userId, long friendId) {
@@ -46,6 +56,13 @@ public class FriendshipService {
                 .orElseThrow(() -> new NotFoundException("User not found: " + friendId));
 
         friendshipRepository.delete(userId, friendId);
+
+        eventService.addEvent(
+                userId,
+                EventType.FRIEND,
+                EventOperation.REMOVE,
+                friendId
+        );
     }
 
     public Collection<UserDto> getFriends(long userId) {

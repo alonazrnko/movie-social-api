@@ -7,6 +7,8 @@ import com.alonazarenko.dao.dto.review.UpdateReviewRequest;
 import com.alonazarenko.dao.repository.ReviewRepository;
 import com.alonazarenko.exception.NotFoundException;
 import com.alonazarenko.model.Review;
+import com.alonazarenko.model.enums.EventOperation;
+import com.alonazarenko.model.enums.EventType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ public class ReviewService {
     private final UserService userService;
     private final FilmService filmService;
     private final ReviewLikeService reviewLikeService;
+    private final EventService eventService;
 
     public ReviewDto createReview(NewReviewRequest request) {
         userService.getById(request.getUserId());
@@ -33,6 +36,13 @@ public class ReviewService {
 
         log.info("Creating review id={} for the movie id={} from user id={}",
                 savedReview.getReviewId(), savedReview.getFilmId(), savedReview.getUserId());
+
+        eventService.addEvent(
+                savedReview.getUserId(),
+                EventType.REVIEW,
+                EventOperation.ADD,
+                savedReview.getReviewId()
+        );
 
         return reviewMapper.mapToReviewDto(savedReview);
     }
@@ -46,16 +56,30 @@ public class ReviewService {
 
         log.info("Updating review id={}", savedReview.getReviewId());
 
+        eventService.addEvent(
+                savedReview.getUserId(),
+                EventType.REVIEW,
+                EventOperation.UPDATE,
+                savedReview.getReviewId()
+        );
+
         return reviewMapper.mapToReviewDto(savedReview);
     }
 
     public void deleteReview(Long reviewId) {
-        reviewRepository.findById(reviewId)
+        Review deletedReview = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("Review with id=" + reviewId + " not found"));
 
         reviewRepository.delete(reviewId);
 
         log.info("Deleting review id={}", reviewId);
+
+        eventService.addEvent(
+                deletedReview.getUserId(),
+                EventType.REVIEW,
+                EventOperation.REMOVE,
+                reviewId
+        );
     }
 
     public ReviewDto getReviewById(Long reviewId) {

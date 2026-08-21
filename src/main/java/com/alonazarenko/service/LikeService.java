@@ -6,6 +6,8 @@ import com.alonazarenko.dao.repository.LikeRepository;
 import com.alonazarenko.dao.repository.UserRepository;
 import com.alonazarenko.exception.NotFoundException;
 import com.alonazarenko.model.Like;
+import com.alonazarenko.model.enums.EventOperation;
+import com.alonazarenko.model.enums.EventType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ public class LikeService {
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
     private final FilmRepository filmRepository;
+    private final EventService eventService;
 
 
     public void addLike(long filmId, long userId) {
@@ -34,6 +37,13 @@ public class LikeService {
         likeRepository.addLike(like);
 
         LikeMapper.mapToLikeDto(like);
+
+        eventService.addEvent(
+                userId,
+                EventType.LIKE,
+                EventOperation.ADD,
+                filmId
+        );
     }
 
     public void removeLike(long filmId, long userId) {
@@ -47,6 +57,13 @@ public class LikeService {
                 });
 
         likeRepository.removeLike(filmId, userId);
+
+        eventService.addEvent(
+                userId,
+                EventType.LIKE,
+                EventOperation.ADD,
+                filmId
+        );
     }
 
     public Set<Long> getLikesIdsByFilm(long filmId) {
