@@ -31,7 +31,6 @@ class MpaRepositoryTest {
 
         jdbcTemplate.update("DELETE FROM mpa_ratings");
 
-        // Создание тестовых данных
         jdbcTemplate.update("INSERT INTO mpa_ratings (mpa_id, name) VALUES (1, 'G')");
         jdbcTemplate.update("INSERT INTO mpa_ratings (mpa_id, name) VALUES (2, 'PG')");
         jdbcTemplate.update("INSERT INTO mpa_ratings (mpa_id, name) VALUES (3, 'PG-13')");
